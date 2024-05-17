@@ -5,6 +5,12 @@ import weather.*;
 import utility.*;
 
 import java.util.Scanner;
+
+import Arena.Arena;
+import Arena.BathHouse;
+import Arena.EmptyArena;
+import Arena.FullArena;
+
 import java.util.Random;
 
 public class Warsim {
@@ -14,6 +20,7 @@ public class Warsim {
   public static Random randNum = new Random();
   public static Ink ink = new Ink();
   public static Weather weather;
+  public static Arena Arena;
 
   // Player Objects
   public static Warrior player; // player
@@ -40,6 +47,8 @@ public class Warsim {
     // set a random weather for the battle
     int weatherType = randNum.nextInt(4) + 1;
     createWeather(weatherType);
+
+
 
     //====================>>
     // Player Setup
@@ -75,14 +84,26 @@ public class Warsim {
     createArmour(who, choice);
 
     ink.printStats(player, enemy);
-    
+
+    int arenaType = randNum.nextInt(4) + 1;
+    createArena(arenaType);
+    ink.printArenaType(Arena);
+
+
+
     // main game loop
     while(!gameOver) { // while the game is NOT over
       if(playerTurn) {
         ink.printAttackMenu();
         attackType = input.nextInt();
+        if (attackType == 3) {
+          winner = "Enemy";
+          gameOver = !gameOver;
+          break;
+        }
         damage = pWeapon.strike(weather.getSeverity(), attackType, player.getStrength(), player.getDexterity());
         damage = eArmour.reduceDamage(damage);
+        ink.printDamage("player",damage);
         enemy.takeDamage(damage);
         if(!enemy.isAlive()) {
           winner = "Player";
@@ -91,6 +112,15 @@ public class Warsim {
       }
       else { // enemy turn code
         System.out.println("Enemy Turn!");
+        attackType = randNum.nextInt(2) + 1;
+        damage = eWeapon.strike(weather.getSeverity(), attackType, enemy.getStrength(), enemy.getDexterity());
+        damage = pArmour.reduceDamage(damage);
+        ink.printDamage("enemy", damage);
+        player.takeDamage(damage);
+        if (!player.isAlive()) {
+          winner = "Enemy";
+          gameOver = !gameOver;
+        }
       }
       ink.printStats(player, enemy);
       playerTurn = !playerTurn; // toggle turns
@@ -202,7 +232,7 @@ public class Warsim {
 
   public static void createWeather(int weatherType) {
     switch (weatherType) {
-      case 1: // sun 
+      case 1: // sun
         weather = new Sun();
         break;
       case 2: // rain
@@ -219,4 +249,28 @@ public class Warsim {
         break;
     } // switch
   } // createWeather()
+
+  public static void createArena(int arenaType) {
+    switch (arenaType) {
+      case 1:
+
+        break;
+      case 2:
+        Arena = new BathHouse();
+        Arena.applyBuff(player, enemy);
+        break;
+      case 3:
+        Arena = new EmptyArena();
+        Arena.applyBuff(player, enemy);
+        break;
+      case 4:
+        Arena = new FullArena();
+        Arena.applyBuff(pWeapon, eWeapon);
+        break;
+      default:
+        System.out.println("Run King Kong!!!");
+        break;
+    }
+
+  }
 } // class
